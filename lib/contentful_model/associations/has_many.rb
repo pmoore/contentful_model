@@ -29,7 +29,7 @@ module ContentfulModel
               # We set the singular of the association name on each object in the collection to allow easy
               # reverse recursion without another API call (i.e. finding the Foo which called .bars())
               super().collect do |child|
-                child.send(:"#{options[:inverse_of]}=",self)
+                child.send(:"#{options[:inverse_of]}=",self) if child.respond_to?(:"#{options[:inverse_of]}=")
               end
             rescue ContentfulModel::AttributeNotFoundError
               # If AttributeNotFoundError is raised, that means that the association name isn't available on the object.

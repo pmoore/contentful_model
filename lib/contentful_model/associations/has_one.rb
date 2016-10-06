@@ -27,7 +27,9 @@ module ContentfulModel
               # Start by calling the association name as a method on the superclass.
               # this will end up in ContentfulModel::Base#method_missing and return the value from Contentful.
               # We set the singular of the association name on this object to allow easy recursing.
-              super().send(:"#{options[:inverse_of]}=",self)
+              association_object = super()
+              association_object.send(:"#{options[:inverse_of]}=",self) if association_object.respond_to?(:"#{options[:inverse_of]}=")
+              association_object
             rescue ContentfulModel::AttributeNotFoundError
               # If method_missing returns an error, the field doesn't exist. If a class is specified, try that.
               if options[:class_name].underscore.to_sym != association_name

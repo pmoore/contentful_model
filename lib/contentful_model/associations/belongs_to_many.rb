@@ -54,35 +54,15 @@ module ContentfulModel
           else
             define_method "#{association_names}" do
               parents = instance_variable_get(:"@#{association_names}")
-              if parents.nil?
-                #get the parent class objects as an array
-                parent_objects = options[:class_name].constantize.send(:all).send(:load)
-                #iterate through parent objects and see if any of the children include the same ID as the method
-                parents = parent_objects.select do |parent_object|
-                  #check to see if the parent object responds to the plural or singular.
-                  if parent_object.respond_to?(:"#{options[:inverse_of].to_s.pluralize}")
-                    collection_of_children_on_parent = parent_object.send(:"#{options[:inverse_of].to_s.pluralize}")
-                    #get the collection of children from the parent. This *might* be nil if the parent doesn't have
-                    # any children, in which case, just skip over this parent item and move on to the next.
-                    if collection_of_children_on_parent.nil?
-                      next
-                    else
-                      collection_of_children_on_parent.collect(&:id).include?(id)
-                    end
-                  else
-                    #if it doesn't respond to the plural, assume singular
-                    child_on_parent = parent_object.send(:"#{options[:inverse_of]}")
-                    # Do the same skipping routine on nil.
-                    if child_on_parent.nil?
-                      next
-                    else
-                      child_on_parent.send(:id) == id
-                    end
+              field_name = options[:field_name] || options[:inverse_of]
 
-                  end
-                end
+              if parents.nil? && field_name
+                field_key = "#{field_name.to_s.camelize(:lower)}.sys.id[in]"
+                query = { field_key => self.id }
+                parents = options[:class_name].constantize.find_by(query).load
                 instance_variable_set(:"@#{association_names}",parents)
               end
+
               parents
             end
           end
